@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"sync"
 	"time"
+	"github.com/sbinet/go-python"
 )
 
 // CeleryWorker represents distributed task worker
@@ -41,6 +42,7 @@ func (w *CeleryWorker) StartWorkerWithContext(ctx context.Context) {
 	var wctx context.Context
 	wctx, w.cancel = context.WithCancel(ctx)
 	w.workWG.Add(w.numWorkers)
+	state := python.PyEval_SaveThread()
 	for i := 0; i < w.numWorkers; i++ {
 		go func(workerID int) {
 			defer w.workWG.Done()
@@ -74,6 +76,7 @@ func (w *CeleryWorker) StartWorkerWithContext(ctx context.Context) {
 			}
 		}(i)
 	}
+	python.PyEval_RestoreThread(state)
 }
 
 // StartWorker starts celery workers
